@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>0062dc1c-6ac6-4e99-a0d0-2fe51e266ec8</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.17.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../JsonPlaceholder.Core/JsonPlaceholder.Core.csproj" />
+    <ProjectReference Include="../JsonPlaceholder.DataAccess/JsonPlaceholder.DataAccess.csproj" />
+  </ItemGroup>
+
+</Project>

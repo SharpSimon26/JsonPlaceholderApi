@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/JsonPlaceholder.Api/JsonPlaceholder.Api.csproj" />
+    <Project Path="src/JsonPlaceholder.Core/JsonPlaceholder.Core.csproj" />
+    <Project Path="src/JsonPlaceholder.DataAccess/JsonPlaceholder.DataAccess.csproj" />
+  </Folder>
+</Solution>
