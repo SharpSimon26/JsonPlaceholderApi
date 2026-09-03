@@ -42,16 +42,19 @@ public class PostRepository : AbstractRepository, IPostRepository
     {
         using var conn = connectionFactory.CreateConnection();
 
-        var sqlMaxId = "select top (1) id from jph_posts order by id desc";
-        var lastId = await conn.ExecuteScalarAsync<int>(sqlMaxId);
+        // Calcola e blocca il nuovo id fino al termine del blocco di istruzioni
+        var sql = @"
+                declare @NewId int;
 
-        int newId = lastId + 1;
-        post.Id = newId;
+                select @NewId = ISNULL(MAX(id), 0) + 1 
+                from jph_posts with (UPDLOCK, HOLDLOCK);
 
-        var sqlInsert = @"insert into jph_posts (id, userId, title, body)
-                values (@Id, @UserId, @Title, @Body);
-                select * from jph_posts where id = @Id";
-        var newPost = await conn.QueryFirstOrDefaultAsync<Post>(sqlInsert, post);
+                insert into jph_posts (id, userId, title, body)
+                values (@NewId, @UserId, @Title, @Body);
+
+                select * from jph_posts where id = @NewId";
+
+        var newPost = await conn.QueryFirstOrDefaultAsync<Post>(sql, post);
 
         return newPost;
     }
@@ -59,8 +62,15 @@ public class PostRepository : AbstractRepository, IPostRepository
     public async Task<Post?> UpdateAsync(Post post)
     {
         using var conn = connectionFactory.CreateConnection();
-        var sql = @"update jph_posts set userId = @UserId, title = @Title, body = @Body where id = @Id;
-                    select * from jph_posts where id = @Id";
+        var sql = @"
+                update jph_posts set 
+                    userId = @UserId, 
+                    title = @Title, 
+                    body = @Body 
+                    where id = @Id;
+
+                select * from jph_posts where id = @Id";
+
         var modifiedPost = await conn.QueryFirstOrDefaultAsync<Post>(sql, post);
 
         return modifiedPost;
