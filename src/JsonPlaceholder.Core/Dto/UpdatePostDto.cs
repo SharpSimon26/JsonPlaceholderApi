@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace JsonPlaceholder.DataAccess.Dto;
+namespace JsonPlaceholder.Core.Dto;
 
 public class UpdatePostDto
 {

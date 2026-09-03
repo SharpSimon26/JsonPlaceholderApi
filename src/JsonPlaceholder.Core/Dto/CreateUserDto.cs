@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace JsonPlaceholder.DataAccess.Dto;
+namespace JsonPlaceholder.Core.Dto;
 
-public class UpdateUserDto
+public class CreateUserDto
 {
     public int Id { get; set; }
 

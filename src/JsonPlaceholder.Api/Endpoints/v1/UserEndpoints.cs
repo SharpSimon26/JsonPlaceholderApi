@@ -1,6 +1,6 @@
 using JsonPlaceholder.Core.Entities;
 using JsonPlaceholder.Core.Interfaces;
-using JsonPlaceholder.DataAccess.Dto;
+using JsonPlaceholder.Core.Dto;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JsonPlaceholder.Api.Endpoints.v1;
