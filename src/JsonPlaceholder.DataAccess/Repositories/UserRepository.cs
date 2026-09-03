@@ -38,6 +38,7 @@ public class UserRepository : AbstractRepository, IUserRepository
 
         int newId = lastId + 1;
         user.Id = newId;
+
         var sqlInsert = @"insert into jph_users (id, name, username, email, phone, website) 
                         values (@Id, @Name, @Username, @Email, @Phone, @Website);
                         select * from jph_users where id = @Id";

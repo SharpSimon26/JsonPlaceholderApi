@@ -41,15 +41,29 @@ public class PostRepository : AbstractRepository, IPostRepository
     public async Task<Post?> CreateAsync(Post post)
     {
         using var conn = connectionFactory.CreateConnection();
-        // TODO
-        throw new NotImplementedException();
+
+        var sqlMaxId = "select top (1) id from jph_posts order by id desc";
+        var lastId = await conn.ExecuteScalarAsync<int>(sqlMaxId);
+
+        int newId = lastId + 1;
+        post.Id = newId;
+
+        var sqlInsert = @"insert into jph_posts (id, userId, title, body)
+                values (@Id, @UserId, @Title, @Body);
+                select * from jph_posts where id = @Id";
+        var newPost = await conn.QueryFirstOrDefaultAsync<Post>(sqlInsert, post);
+
+        return newPost;
     }
 
     public async Task<Post?> UpdateAsync(Post post)
     {
         using var conn = connectionFactory.CreateConnection();
-        // TODO
-        throw new NotImplementedException();
+        var sql = @"update jph_posts set userId = @UserId, title = @Title, body = @Body where id = @Id;
+                    select * from jph_posts where id = @Id";
+        var modifiedPost = await conn.QueryFirstOrDefaultAsync<Post>(sql, post);
+
+        return modifiedPost;
     }
 
     public async Task<int> DeleteAsync(int id)
@@ -59,6 +73,5 @@ public class PostRepository : AbstractRepository, IPostRepository
         var numRows = await conn.ExecuteAsync(sql, new { id });
 
         return numRows;
-
     }
 }
