@@ -1,16 +1,46 @@
-@JsonPlaceholder.Api_HostAddress = http://localhost:5129
+@JPH_HostAddress = http://localhost:5129
 
-GET {{JsonPlaceholder.Api_HostAddress}}/api/v1/users
+### GET All Users
+GET {{JPH_HostAddress}}/api/v1/users
 Accept: application/json
 
-###
-
-GET {{JsonPlaceholder.Api_HostAddress}}/api/v1/users/1
+### GET User by Id
+GET {{JPH_HostAddress}}/api/v1/users/10
 Accept: application/json
 
-###
+### Create User
+POST {{JPH_HostAddress}}/api/v1/users
+Content-Type: application/json
 
-GET {{JsonPlaceholder.Api_HostAddress}}/api/v1/posts
+{
+  "name": "Samantha Gates",
+  "username": "samanthagates",
+  "email": "samantha.gates@microsoft.com",
+  "phone": "853-747-3264",
+  "website": "microsoft.com"
+}
+
+### Get All Posts
+GET {{JPH_HostAddress}}/api/v1/posts
 Accept: application/json
+
+### Get Post by Id
+GET {{JPH_HostAddress}}/api/v1/posts/5
+Accept: application/json
+
+### Get Posts by User Id
+GET {{JPH_HostAddress}}/api/v1/posts?userId=1
+Accept: application/json
+
+### Create Post
+POST {{JPH_HostAddress}}/api/v1/posts
+Content-Type: application/json
+
+{
+  "id": 5,
+  "userId": 1,
+  "title": "nesciunt quas odio",
+  "body": "salami veniam quaerat sunt sed\r\nalias aut fugiat sit autem sed est\r\nvoluptatem omnis possimus esse voluptatibus quis\r\nest aut tenetur dolor neque"
+}
 
 ###

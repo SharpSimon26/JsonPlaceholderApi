@@ -1,0 +1,27 @@
+name: Esecuzione notturna Unit Test .NET 10
+
+on:
+    schedule:
+        - cron: '30 3 * * *'
+    workflow_dispatch: 
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Scarica il codice del progetto
+              uses: actions/checkout@v7
+
+            - name: Installa .NET 10 SDK
+              uses: actions/setup-dotnet@v6
+              with:
+                dotnet-version: '10.x'
+
+            - name: Ripristina le dipendenze
+              run: dotnet restore
+
+            - name: Compila la soluzione
+              run: dotnet build --configuration Release --no-restore
+
+            - name: Esegui i test
+              run: dotnet test --configuration Release --no-restore --no-build
