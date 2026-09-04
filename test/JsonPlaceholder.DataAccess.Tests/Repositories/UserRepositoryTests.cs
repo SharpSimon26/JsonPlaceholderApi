@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using System.Data;
+﻿using System.Data;
 using Dapper;
 using JsonPlaceholder.Core.Entities;
 using JsonPlaceholder.DataAccess.Database;
@@ -12,29 +11,29 @@ namespace JsonPlaceholder.DataAccess.Tests.Repositories;
 public class UserRepositoryTests
 {
     [Fact]
-    public async Task GetAllAsync_Returns_List_Of_Posts()
+    public async Task GetAllAsync_Returns_List_Of_Users()
     {
         // 1. Arrange
         var mockFactory = new Mock<IDbConnectionFactory>();
         var mockConnection = new Mock<IDbConnection>();
 
-        var expectedPosts = new List<Post>
+        var expectedPosts = new List<User>
         {
-            new() { Id = 1, UserId = 10, Title = "Primo titolo", Body = "Primo Post" },
-            new() { Id = 2, UserId = 20, Title = "Secondo titolo", Body = "Secondo Post" },
-            new() { Id = 3, UserId = 30, Title = "Terzo titolo", Body = "Terzo Post" }
+            new() { Id = 1, Name = "Mario Rossi", Username = "mariorossi", Email = "mariorossi@gmail.com", Phone = "0039 378 252 848", Website = "mariorossi.com" },
+            new() { Id = 2, Name = "Giuseppe Verdi", Username = "giuseppeverdi", Email = "giuseppeverdi@gmail.com", Phone = "0039 233 252 849", Website = "giuseppeverdi.com" },
+            new() { Id = 3, Name = "Achille Bianchi", Username = "achillebianchi", Email = "achillebianchi@gmail.com", Phone = "0039 464 252 850", Website = "achillebianchi.com" },
         };
 
         // Imposta il mock per restituire la connessione mockata
         mockFactory.Setup(db => db.CreateConnection()).Returns(mockConnection.Object);
 
         // Imposta Moq.Dapper per intercettare la query
-        mockConnection.SetupDapperAsync(conn => conn.QueryAsync<Post>(
+        mockConnection.SetupDapperAsync(conn => conn.QueryAsync<User>(
                 It.IsAny<string>(), It.IsAny<object>(), null, null, null
             ))
             .ReturnsAsync(expectedPosts);
 
-        var repository = new PostRepository(mockFactory.Object);
+        var repository = new UserRepository(mockFactory.Object);
 
         // 2. Act
         var result = await repository.GetAllAsync();
@@ -49,99 +48,51 @@ public class UserRepositoryTests
         {
             Assert.NotNull(item);
             Assert.True(item.Id > 0);
-            Assert.True(item.UserId > 0);
-            Assert.True(!string.IsNullOrWhiteSpace(item.Title));
-            Assert.True(!string.IsNullOrWhiteSpace(item.Body));
+            Assert.False(string.IsNullOrWhiteSpace(item.Name));
+            Assert.False(string.IsNullOrWhiteSpace(item.Username));
+            Assert.False(string.IsNullOrWhiteSpace(item.Email));
+            Assert.False(string.IsNullOrWhiteSpace(item.Phone));
+            Assert.False(string.IsNullOrWhiteSpace(item.Website));
         });
 
         // Verifica elementi specifici
-        Assert.Equal("Primo titolo", result.First().Title);
-        Assert.Equal("Terzo Post", result.Last().Body);
+        Assert.Equal("Mario Rossi", result.First().Name);
+        Assert.Equal("achillebianchi.com", result.Last().Website);
 
         // Verifica che la connessione al DB sia stata invocata esattamente 1 volta
         mockFactory.Verify(db => db.CreateConnection(), Times.Once);
     }
 
     [Fact]
-    public async Task GetByIdAsync_ShouldReturnUser_WhenUserExists()
+    public async Task GetByIdAsync_ShouldReturnUser_WhenIdExists()
     {
         // 1. Arrange
         var mockFactory = new Mock<IDbConnectionFactory>();
         var mockConnection = new Mock<IDbConnection>();
 
-        var expectedPost = new Post { Id = 18, UserId = 23,  Title = "Mio Titolo", Body = "Mio Body" };
+        var expectedUser = new User { Id = 43, Name = "Mario Rossi", Username = "mariorossi", Email = "mario.rossi@gmail.com", Phone = "0039 378 252 848", Website = "mariorossi.com" };
 
         // Imposta il mock per restituire la connessione mockata
         mockFactory.Setup(db => db.CreateConnection()).Returns(mockConnection.Object);
 
         // Imposta Moq.Dapper per intercettare la query
-        mockConnection.SetupDapperAsync(conn => conn.QueryFirstOrDefaultAsync<Post>(
+        mockConnection.SetupDapperAsync(conn => conn.QueryFirstOrDefaultAsync<User>(
                 It.IsAny<string>(), It.IsAny<object>(), null, null, null
             ))
-            .ReturnsAsync(expectedPost);
+            .ReturnsAsync(expectedUser);
 
-        var repository = new PostRepository(mockFactory.Object);
+        var repository = new UserRepository(mockFactory.Object);
 
         // 2. Act
-        var result = await repository.GetByIdAsync(18);
+        var result = await repository.GetByIdAsync(43);
 
         // 3. Assert
         Assert.NotNull(result);
-        Assert.Equal(18, result.Id);
-        Assert.Equal(23, result.UserId);
-        Assert.Equal("Mio Titolo", result.Title);
-        Assert.Equal("Mio Body", result.Body);
-    }
-
-    [Fact]
-    public async Task GetByIdAsync_ShouldReturnNull_WhenIdDoesNotExist()
-    {
-        // Arrange
-        var mockFactory = new Mock<IDbConnectionFactory>();
-        var mockConnection = new Mock<IDbConnection>();
-
-        mockFactory.Setup(db => db.CreateConnection()).Returns(mockConnection.Object);
-
-        // Dapper restituisce null se non trova nulla
-        mockConnection.SetupDapperAsync(conn => conn.QueryFirstOrDefaultAsync<Post>(
-                It.IsAny<string>(), It.IsAny<object>(), null, null, null
-            ))
-            .ReturnsAsync((Post?)null);
-
-        var repository = new PostRepository(mockFactory.Object);
-
-        // Act
-        var result = await repository.GetByIdAsync(999); // Id inesistente
-
-        // Assert
-        Assert.Null(result);
-    }
-
-    [Fact]
-    public async Task CreateAsync_ShouldReturn_Post()
-    {
-        // Arrange
-        var mockFactory = new Mock<IDbConnectionFactory>();
-        var mockConnection = new Mock<IDbConnection>();
-
-        var expectedPost = new Post { Id = 15, UserId = 8, Title = "Nuovo titolo", Body = "Nuovo post" };
-
-        // Imposta il mock per restituire la connessione mockata
-        mockFactory.Setup(db => db.CreateConnection()).Returns(mockConnection.Object);
-
-        // Imposta Moq.Dapper per intercettare le query
-        mockConnection
-            .SetupDapperAsync(conn => conn.QueryFirstOrDefaultAsync<Post>(It.IsAny<string>(), It.IsAny<object>(), null, null, null))
-            .ReturnsAsync(expectedPost);
-
-        var repository = new PostRepository(mockFactory.Object);
-
-        // Act
-        var result = await repository.CreateAsync(new Post { Id = 1, UserId = 8, Title = "Nuovo titolo", Body = "Nuovo post" });
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(15, result.Id);
-        Assert.Equal("Nuovo titolo", result.Title);
+        Assert.Equal(43, result.Id);
+        Assert.Equal("Mario Rossi", result.Name);
+        Assert.Equal("mariorossi", result.Username);
+        Assert.Equal("mario.rossi@gmail.com", result.Email);
+        Assert.Equal("0039 378 252 848", result.Phone);
+        Assert.Equal("mariorossi.com", result.Website);
     }
 }
