@@ -33,16 +33,18 @@ public class UserRepository : AbstractRepository, IUserRepository
     {
         using var conn = connectionFactory.CreateConnection();
 
-        var sqlMaxId = "select top (1) id from jph_users order by id desc";
-        var lastId = await conn.ExecuteScalarAsync<int>(sqlMaxId);
+        var sql = @"
+                declare @NewId int;
 
-        int newId = lastId + 1;
-        user.Id = newId;
+                select @NewId = ISNULL(MAX(id), 0) + 1 
+                from jph_users with (UPDLOCK, HOLDLOCK);
 
-        var sqlInsert = @"insert into jph_users (id, name, username, email, phone, website) 
-                        values (@Id, @Name, @Username, @Email, @Phone, @Website);
-                        select * from jph_users where id = @Id";
-        var newUser = await conn.QueryFirstOrDefaultAsync<User>(sqlInsert, user);
+                insert into jph_users (id, name, username, email, phone, website) 
+                values (@NewId, @Name, @Username, @Email, @Phone, @Website);
+
+                select * from jph_users where id = @NewId";
+    
+        var newUser = await conn.QueryFirstOrDefaultAsync<User>(sql, user);
 
         return newUser;
     }
@@ -50,9 +52,16 @@ public class UserRepository : AbstractRepository, IUserRepository
     public async Task<User?> UpdateAsync(User user)
     {
         using var conn = connectionFactory.CreateConnection();
-        var sql = @"update jph_users set name = @Name, username = @Username, email = @Email,
-                    phone = @Phone, website = @Website where id = @Id;
-                    select * from jph_users where id = @Id";
+        var sql = @"update jph_users set 
+                name = @Name, 
+                    username = @Username, 
+                    email = @Email,
+                    phone = @Phone, 
+                    website = @Website 
+                    where id = @Id;
+
+                select * from jph_users where id = @Id";
+
         var modifiedUser = await conn.QueryFirstOrDefaultAsync<User>(sql, user);
 
         return modifiedUser;
