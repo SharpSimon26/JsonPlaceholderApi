@@ -95,4 +95,114 @@ public class UserRepositoryTests
         Assert.Equal("0039 378 252 848", result.Phone);
         Assert.Equal("mariorossi.com", result.Website);
     }
+
+    [Fact]
+    public async Task GetByIdAsync_ShouldReturnNull_WhenIdDoesNotExist()
+    {
+        // Arrange
+        var mockFactory = new Mock<IDbConnectionFactory>();
+        var mockConnection = new Mock<IDbConnection>();
+
+        mockFactory.Setup(db => db.CreateConnection()).Returns(mockConnection.Object);
+
+        // Dapper restituisce null se non trova nulla
+        mockConnection.SetupDapperAsync(conn => conn.QueryFirstOrDefaultAsync<User>(
+                It.IsAny<string>(), It.IsAny<object>(), null, null, null
+            ))
+            .ReturnsAsync((User?)null);
+
+        var repository = new UserRepository(mockFactory.Object);
+
+        // Act
+        var result = await repository.GetByIdAsync(999); // Id inesistente
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldReturn_User()
+    {
+        // Arrange
+        var mockFactory = new Mock<IDbConnectionFactory>();
+        var mockConnection = new Mock<IDbConnection>();
+
+        var expectedUser = new User { Id = 4, Name = "Luigi Neri", Username = "luigineri", Email = "luigineri@gmail.com", Phone = "0039 040 366 84870", Website = "luigineri.com" };
+
+        // Imposta il mock per restituire la connessione mockata
+        mockFactory.Setup(db => db.CreateConnection()).Returns(mockConnection.Object);
+
+        // Imposta Moq.Dapper per intercettare le query
+        mockConnection
+            .SetupDapperAsync(conn => conn.QueryFirstOrDefaultAsync<User>(It.IsAny<string>(), It.IsAny<object>(), null, null, null))
+            .ReturnsAsync(expectedUser);
+
+        var repository = new UserRepository(mockFactory.Object);
+
+        // Act
+        var result = await repository.CreateAsync(new User { Id = 1, Name = "Luigi Neri", Username = "luigineri", Email = "luigineri@gmail.com", Phone = "0039 040 366 84870", Website = "luigineri.com" });
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(4, result.Id);
+        Assert.Equal("Luigi Neri", result.Name);
+        Assert.Equal("luigineri", result.Username);
+        Assert.Equal("luigineri@gmail.com", result.Email);
+        Assert.Equal("0039 040 366 84870", result.Phone);
+        Assert.Equal("luigineri.com", result.Website);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldUpdate_User()
+    {
+        // Arrange
+        var mockFactory = new Mock<IDbConnectionFactory>();
+        var mockConnection = new Mock<IDbConnection>();
+
+        var expectedUser = new User { Id = 5, Name = "Marta Viola", Username = "martaviola", Email = "martaviola@gmail.com", Phone = "0039 040 955 98830", Website = "martaviola.com" };
+
+        // Imposta il mock per restituire la connessione mockata
+        mockFactory.Setup(db => db.CreateConnection()).Returns(mockConnection.Object);
+
+        // Imposta Moq.Dapper per intercettare le query
+        mockConnection
+            .SetupDapperAsync(conn => conn.QueryFirstOrDefaultAsync<User>(It.IsAny<string>(), It.IsAny<object>(), null, null, null))
+            .ReturnsAsync(expectedUser);
+
+        var repository = new UserRepository(mockFactory.Object);
+
+        // Act
+        var result = await repository.UpdateAsync(expectedUser);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(5, result.Id);
+        Assert.Equal("Marta Viola", result.Name);
+        Assert.Equal("martaviola", result.Username);
+        Assert.Equal("martaviola@gmail.com", result.Email);
+        Assert.Equal("0039 040 955 98830", result.Phone);
+        Assert.Equal("martaviola.com", result.Website);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldDelete_User()
+    {
+        // Arrange
+        var mockFactory = new Mock<IDbConnectionFactory>();
+        var mockConnection = new Mock<IDbConnection>();
+
+        // Imposta il mock per restituire la connessione mockata
+        mockFactory.Setup(db => db.CreateConnection()).Returns(mockConnection.Object);
+
+        mockConnection
+            .SetupDapperAsync(conn => conn.ExecuteAsync(It.IsAny<string>(), It.IsAny<object>(), null, null, null))
+            .ReturnsAsync(1);
+
+        var repository = new UserRepository(mockFactory.Object);
+
+        // Act
+        var result = await repository.DeleteAsync(123);
+
+        Assert.Equal(1, result);
+    }
 }
