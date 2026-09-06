@@ -5,6 +5,7 @@
     <Project Path="src/JsonPlaceholder.DataAccess/JsonPlaceholder.DataAccess.csproj" />
   </Folder>
   <Folder Name="/test/">
+    <Project Path="test/JsonPlaceholder.Api.Tests/JsonPlaceholder.Api.Tests.csproj" />
     <Project Path="test/JsonPlaceholder.DataAccess.Tests/JsonPlaceholder.DataAccess.Tests.csproj" />
   </Folder>
 </Solution>
