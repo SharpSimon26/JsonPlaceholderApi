@@ -72,6 +72,9 @@ public class UserEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        // Verifica che il repo venga chiamato
+        _mockRepo.Verify(r => r.GetByIdAsync(It.Is<int>(i => i == 99)), Times.Once);
     }
 
     [Fact]
