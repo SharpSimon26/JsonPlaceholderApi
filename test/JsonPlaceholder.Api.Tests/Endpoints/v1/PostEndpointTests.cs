@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using JsonPlaceholder.Core.Dto;
 using JsonPlaceholder.Core.Entities;
 using JsonPlaceholder.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -120,6 +121,9 @@ public class PostEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Equal(expectedPost.UserId, post.UserId);
         Assert.Equal(expectedPost.Title, post.Title);
         Assert.Equal(expectedPost.Body, post.Body);
+
+        // Verifica che il repo venga chiamato
+        _mockRepo.Verify(r => r.GetByIdAsync(It.Is<int>(i => i == 1)), Times.Once);
     }
 
     [Fact]
@@ -134,5 +138,183 @@ public class PostEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        // Verifica che il repo venga chiamato
+        _mockRepo.Verify(r => r.GetByIdAsync(It.Is<int>(i => i == 99)), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreatePost_Returns200AndPost()
+    {
+        // Arrange
+        var createPostDto = new CreatePostDto
+        {
+            Id = 100, 
+            UserId = 20, 
+            Title = "Test Post 100", 
+            Body = "Test body 100" 
+        };
+
+        var expectedResult = new Post
+        {
+            Id = 10, 
+            UserId = 20, 
+            Title = "Test Post 100", 
+            Body = "Test body 100" 
+        };
+
+        _mockRepo.Setup(r => r.CreateAsync(It.IsAny<Post>()))
+                              .ReturnsAsync(expectedResult);
+        var client = _factory.CreateClient();
+    
+        // Act
+        var response = await client.PostAsJsonAsync("/api/v1/posts", createPostDto);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var post = await response.Content.ReadFromJsonAsync<Post>();
+        Assert.NotNull(post);
+        Assert.Equal(10, expectedResult.Id);
+        Assert.Equal(20, expectedResult.UserId);
+        Assert.Equal("Test Post 100", expectedResult.Title);
+        Assert.Equal("Test body 100", expectedResult.Body);
+    
+        // Assert
+        _mockRepo.Verify(r => r.CreateAsync(It.Is<Post>(p =>
+            p.Id == createPostDto.Id &&
+            p.UserId == createPostDto.UserId &&
+            p.Title == createPostDto.Title &&
+            p.Body == createPostDto.Body
+        )), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreatePost_Returns400()
+    {
+        // Arrange
+        var createPostDto = new CreatePostDto
+        {
+            Id = 100, 
+            UserId = 20, 
+            Title = "", 
+            Body = "" 
+        };
+    
+        // Act
+        _mockRepo.Setup(r => r.CreateAsync(It.IsAny<Post>()));
+        var client = _factory.CreateClient();
+    
+        // Assert
+        var response = await client.PostAsJsonAsync("/api/v1/posts", createPostDto);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        // Verifica che il repo non sia stato chiamato
+        _mockRepo.Verify(r => r.CreateAsync(It.IsAny<Post>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdatePost_Resturns200AndPost()
+    {
+        // Arrange
+        var updatePostDto = new UpdatePostDto
+        {
+            Id = 1, 
+            UserId = 20,
+            Title = "New Title",
+            Body = "New Body"
+        };
+
+        var expectedPost = new Post
+        {
+            Id = 1, 
+            UserId = 20,
+            Title = "New Title",
+            Body = "New Body"
+        };
+
+        _mockRepo.Setup(r => r.UpdateAsync(It.IsAny<Post>()))
+                              .ReturnsAsync(expectedPost);
+        var client = _factory.CreateClient();
+    
+        // Act
+        var response = await client.PutAsJsonAsync("/api/v1/posts/1", updatePostDto);
+    
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var post = await response.Content.ReadFromJsonAsync<Post>();
+        Assert.NotNull(post);
+        Assert.Equal(expectedPost.Id, post.Id);
+        Assert.Equal(expectedPost.UserId, post.UserId);
+        Assert.Equal(expectedPost.Title, post.Title);
+        Assert.Equal(expectedPost.Body, post.Body);
+
+        _mockRepo.Verify(r => r.UpdateAsync(It.Is<Post>(u => 
+            u.Id == updatePostDto.Id &&
+            u.UserId == updatePostDto.UserId &&
+            u.Title == updatePostDto.Title &&
+            u.Body == updatePostDto.Body
+        )), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdatePost_Returns404_WhenPostNotFound()
+    {
+        // Arrange
+        var updatePostDto = new UpdatePostDto
+        {
+            Id = 1, 
+            UserId = 20,
+            Title = "New Title",
+            Body = "New Body"
+        };
+    
+        _mockRepo.Setup(r => r.UpdateAsync(It.IsAny<Post>()))
+                              .ReturnsAsync((Post?)null);
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.PutAsJsonAsync("/api/v1/posts/1", updatePostDto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        _mockRepo.Verify(r => r.UpdateAsync(It.Is<Post>(r =>
+            r.Id == updatePostDto.Id &&
+            r.UserId == updatePostDto.UserId &&
+            r.Title == updatePostDto.Title &&
+            r.Body == updatePostDto.Body
+        )), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeletePost_Returns204_WhenPostExists()
+    {
+        // Arrange
+        _mockRepo.Setup(r => r.DeleteAsync(It.IsAny<int>()))
+                              .ReturnsAsync(1);
+        var client = _factory.CreateClient();
+    
+        // Act
+        var response = await client.DeleteAsync("/api/v1/posts/1");
+    
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        _mockRepo.Verify(r => r.DeleteAsync(It.Is<int>(i => i == 1)), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeletePost_Returns404_WhenPostNotFound()
+    {
+        // Arrange
+        _mockRepo.Setup(r => r.DeleteAsync(It.IsAny<int>()))
+                              .ReturnsAsync(0);
+        var client = _factory.CreateClient();
+    
+        // Act
+        var response = await client.DeleteAsync("/api/v1/posts/99");
+    
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        _mockRepo.Verify(r => r.DeleteAsync(It.Is<int>(i => i == 99)), Times.Once);
     }
 }

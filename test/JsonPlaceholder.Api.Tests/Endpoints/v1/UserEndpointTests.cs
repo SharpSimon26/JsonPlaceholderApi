@@ -124,6 +124,9 @@ public class UserEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Equal(expectedUser.Email, user.Email);
         Assert.Equal(expectedUser.Phone, user.Phone);
         Assert.Equal(expectedUser.Website, user.Website);
+
+        // Verifica che il repo venga chiamato
+        _mockRepo.Verify(r => r.GetByIdAsync(It.Is<int>(i => i == 1)), Times.Once);
     }
 
     [Fact]
@@ -260,7 +263,7 @@ public class UserEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        _mockRepo.Verify(r => r.DeleteAsync(It.IsAny<int>()), Times.Once);
+        _mockRepo.Verify(r => r.DeleteAsync(It.Is<int>(i => i == 1)), Times.Once);
     }
 
     [Fact]
@@ -277,6 +280,6 @@ public class UserEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
 
-        _mockRepo.Verify(r => r.DeleteAsync(It.IsAny<int>()), Times.Once);
+        _mockRepo.Verify(r => r.DeleteAsync(It.Is<int>(i => i == 99)), Times.Once);
     }
 }
