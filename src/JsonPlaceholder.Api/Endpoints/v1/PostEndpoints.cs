@@ -73,7 +73,8 @@ public static class PostEndpoints
         })
         .WithSummary("Update Post")
         .Produces<int>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status400BadRequest);
+        .Produces(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status404NotFound);
 
         // DELETE
         app.MapDelete("/{id}", async ([FromRoute] int id, IPostRepository postRepository) =>
