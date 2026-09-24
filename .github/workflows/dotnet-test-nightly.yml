@@ -2,7 +2,7 @@ name: Esecuzione notturna Unit Test .NET 10
 
 on:
     schedule:
-        - cron: '30 3 * * *'
+        - cron: '30 0 * * *'
     workflow_dispatch: 
 
 jobs:
@@ -26,8 +26,19 @@ jobs:
             - name: Esegui i test con Code Coverage
               run: dotnet test --configuration Release --no-restore --no-build --collect:"XPlat Code Coverage" --results-directory ./TestResults
 
+            - name: ReportGenerator
+              uses: danielpalme/ReportGenerator-GitHub-Action@v5.5.11
+              with:
+                reports: './TestResults/**/coverage.cobertura.xml'
+                targetdir: './CoverageReport'
+                reporttypes: 'MarkdownSummary;HTMLInline'
+
+            - name: Pubblica Code Coverage nel Summary
+              run: cat ./CoverageReport/Summary.md >> "$GITHUB_STEP_SUMMARY"
+
             - name: Carica il report di Code Coverage
               uses: actions/upload-artifact@v7
               with:
                 name: code-coverage-report
-                path: './TestResults/*/*.xml'
+                path: ./CoverageReport
+                retention-days: 10
