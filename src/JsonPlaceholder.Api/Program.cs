@@ -1,4 +1,5 @@
 using JsonPlaceholder.Api.Endpoints;
+using JsonPlaceholder.Api.Exceptions;
 using JsonPlaceholder.Core.Interfaces;
 using JsonPlaceholder.DataAccess.Database;
 using JsonPlaceholder.DataAccess.Repositories;
@@ -10,6 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
+
+// Registra il supporto standard ProblemDetails e l'handler custom
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 // Abilita i servizi di validazione
 builder.Services.AddValidation();
@@ -34,6 +39,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Inserisce il middleware di gestione eccezioni nella pipeline
+app.UseExceptionHandler();
 
 app.MapEndpoints();
 
